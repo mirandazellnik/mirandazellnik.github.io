@@ -1,10 +1,58 @@
 ﻿'use strict';
 
 // Theme switch: set to "dark" or "light".
-const SITE_THEME = 'dark'; 
+const SITE_THEME = 'dark';
+const THEME_STORAGE_KEY = 'portfolio_theme';
 const validThemes = new Set(['dark', 'light']);
-const activeTheme = validThemes.has(SITE_THEME) ? SITE_THEME : 'dark';
-document.documentElement.setAttribute('data-theme', activeTheme);
+
+const themeToggleBtn = document.querySelector('[data-theme-toggle]');
+const themeToggleIcon = document.querySelector('[data-theme-icon]');
+
+const updateThemeToggleUi = function (theme) {
+  if (!themeToggleBtn || !themeToggleIcon) {
+    return;
+  }
+
+  const nextTheme = theme === 'dark' ? 'light' : 'dark';
+  themeToggleIcon.setAttribute('name', theme === 'dark' ? 'moon-outline' : 'sunny-outline');
+  themeToggleBtn.setAttribute('aria-label', `Switch to ${nextTheme} mode`);
+  themeToggleBtn.setAttribute('title', `Switch to ${nextTheme} mode`);
+};
+
+const applyTheme = function (theme) {
+  const safeTheme = validThemes.has(theme) ? theme : 'dark';
+  document.documentElement.setAttribute('data-theme', safeTheme);
+  updateThemeToggleUi(safeTheme);
+  return safeTheme;
+};
+
+const getInitialTheme = function () {
+  try {
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    if (validThemes.has(storedTheme)) {
+      return storedTheme;
+    }
+  } catch (_) {
+    // Ignore storage access errors and fall back to default.
+  }
+
+  return validThemes.has(SITE_THEME) ? SITE_THEME : 'dark';
+};
+
+let currentTheme = applyTheme(getInitialTheme());
+
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener('click', function () {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    currentTheme = applyTheme(currentTheme);
+
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
+    } catch (_) {
+      // Ignore storage access errors.
+    }
+  });
+}
 
 const elementToggleFunc = function (elem) {
   if (elem) {
